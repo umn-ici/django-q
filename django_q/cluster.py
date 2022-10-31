@@ -474,7 +474,8 @@ def save_task(task, broker: Broker):
     # SAVE LIMIT > 0: Prune database, SAVE_LIMIT 0: No pruning
     close_old_django_connections()
     try:
-        with db.transaction.atomic():
+        database_to_use = {"using": Conf.ORM} if not Conf.HAS_REPLICA else {}
+        with db.transaction.atomic(**database_to_use):
             last = Success.objects.select_for_update().last()
             if task["success"] and 0 < Conf.SAVE_LIMIT <= Success.objects.count():
                 last.delete()
